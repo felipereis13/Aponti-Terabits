@@ -34,4 +34,5 @@ Construir o MVP em cinco semanas, uma etapa por vez. A etapa inicial é somente 
 - Rodar `npm.cmd run check` em `frontend/` e `backend/`. Backend exige o banco de teste saudável; ausência dele é bloqueio de ambiente, não aprovação dos testes.
 - Validar Prisma com `npm.cmd run db:validate` em `backend/`, com DATABASE_URL local configurada.
 - Atualizar os documentos afetados e `docs/progresso.md` com implementação, evidências, pendências e próximo prompt.
+- Manter `README.md` como apresentação geral e guia de execução do projeto. Registrar atualizações em `docs/progresso.md` e detalhes técnicos em `docs/`, com índice em `docs/README.md`; não adicionar histórico de etapas ou resultados de verificações ao README principal.
 - Explicar o que mudou e o que foi efetivamente verificado. Parar ao terminar a etapa; não iniciar a próxima sozinho.

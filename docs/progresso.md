@@ -25,6 +25,10 @@ Ajuste posterior: classe Tailwind `bg-white/[0.025]` normalizada para `bg-white/
 
 Nenhuma migration, conta, integração externa ou aplicação publicada foi criada nesta etapa.
 
+## Atualizações de documentação — 25/11/2026
+
+README reorganizado como apresentação geral, tecnologias, pré-requisitos, execução e encerramento do ambiente. Procedimentos de desenvolvimento, testes, build e diagnóstico centralizados em `docs/desenvolvimento.md`; índice criado em `docs/README.md`. Planejamento e histórico continuam em seus documentos próprios. `AGENTS.md` atualizado para manter essa organização nas próximas alterações. Alteração somente documental, validada por conferência dos links locais e dos comandos frente aos scripts existentes.
+
 ## Próximo passo
 
 Executar [02 — Laboratório de deploy](prompts/02-laboratorio.md), depois de validar a fundação. Não iniciar automaticamente.
