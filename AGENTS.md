@@ -11,10 +11,21 @@ Construir o MVP em cinco semanas, uma etapa por vez. A etapa inicial é somente 
 3. Mostrar o plano curto, arquivos envolvidos e frases dos testes em português antes de alterar código. Aguardar revisão do usuário, salvo se ele já tiver aprovado a implementação desse escopo no contexto atual.
 4. Preparar cada migration para revisão antes de aplicar. Nunca executar migration, reset, limpeza ou teste em produção. Não aplicar automaticamente a migration junto com instalação, startup ou testes locais.
 
+## Versionamento
+
+- Usar Git com o padrão Conventional Commits 1.0.0 (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`).
+- Mensagens de commit em inglês, no imperativo, com o assunto de até aproximadamente 72 caracteres.
+- Fazer commits pequenos e atômicos; não misturar funcionalidade, correção e refatoração no mesmo commit.
+- Usar branches no formato `tipo/nome-em-kebab-case`, em inglês (ex.: `feature/user-login`, `fix/auth-token-expiry`, `docs/update-readme`).
+- Não commitar diretamente na `main`.
+- Não fazer push nem operações destrutivas (`reset --hard`, force push, rebase etc.) sem autorização.
+- Ao concluir uma tarefa, sugerir as mensagens de commit e aguardar autorização do usuário antes de commitar.
+
 ## Estrutura e stack
 
 - `frontend/`: React + TypeScript + Vite + Tailwind + React Router; `backend/`: Express + TypeScript + Prisma + PostgreSQL. Projetos npm independentes, com lockfiles próprios. Sem workspaces e sem monorepo tooling adicional.
 - `infra/`: laboratório VPS e templates. `docs/`: decisões, contratos e prompts. Usar `docker-compose.yml` na raiz.
+- Build de projetos é centralizado na Terabits: nunca exigir workflow ou Dockerfile no repositório selecionado. Seguir `docs/build-publicacao.md` para modos Node.js, site estático e Dockerfile opcional, workflow central e isolamento das credenciais.
 - Backend modular: routes → controller → service → repository. Regras não pertencem aos controllers, componentes ou integrações. Evitar abstrações vazias e bibliotecas sem necessidade.
 - Criar módulos quando necessários, não gerar todas as camadas de funcionalidades futuras na fundação.
 - No PowerShell usar `npm.cmd` e `npx.cmd`. Node.js 24. Prisma CLI e client devem usar a mesma versão, atualmente 6.19.3; atualizações de major exigem uma tarefa própria.

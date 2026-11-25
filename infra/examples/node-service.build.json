@@ -1,0 +1,9 @@
+{
+  "projectId": "11111111-1111-4111-8111-111111111111",
+  "repository": "YOUR-ACCOUNT/example-service",
+  "sourceCommitSha": "0000000000000000000000000000000000000000",
+  "buildMode": "NODE_SERVICE",
+  "testCommand": "npm test",
+  "startCommand": "npm start",
+  "internalPort": 3000
+}

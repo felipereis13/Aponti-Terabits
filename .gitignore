@@ -11,4 +11,5 @@ coverage/
 *.tsbuildinfo
 infra/vps/secrets/
 infra/vps/data/
+infra/.work/
 prompts/

@@ -1,0 +1,9 @@
+{
+  "projectId": "22222222-2222-4222-8222-222222222222",
+  "repository": "YOUR-ACCOUNT/example-site",
+  "sourceCommitSha": "0000000000000000000000000000000000000000",
+  "buildMode": "STATIC_SITE",
+  "testCommand": "npm test",
+  "buildCommand": "npm run build",
+  "publishDirectory": "dist"
+}

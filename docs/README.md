@@ -7,8 +7,10 @@ O [README principal](../README.md) apresenta o projeto e explica como executá-l
 | Documento | Conteúdo |
 |---|---|
 | [Desenvolvimento](desenvolvimento.md) | Configuração local, comandos, testes, build e solução de problemas |
+| [Laboratório de deploy](laboratorio.md) | VPS DinD/SSH, geradores, exemplos, validação local e workflow central manual |
 | [Requisitos](requisitos.md) | Objetivos, jornada prevista, funcionalidades e limites do MVP |
 | [Arquitetura](arquitetura.md) | Organização do código, integrações e decisões técnicas |
+| [Build e publicação](build-publicacao.md) | Configuração pela interface, geração Docker e workflow central da Terabits |
 | [Fundamentos](fundamentos.md) | Segurança, concorrência, idempotência, testes e responsabilidades |
 | [Banco de dados](banco-de-dados.md) | Persistência, modelos, constraints e migrations |
 | [API](api.md) | Endpoints disponíveis e contratos planejados |

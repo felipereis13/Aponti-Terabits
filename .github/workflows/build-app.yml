@@ -1,0 +1,123 @@
+name: Build application (public lab)
+run-name: deploy-${{ inputs.deploy_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_id:
+        description: Unique deployment UUID (do not reuse published IDs)
+        required: true
+        type: string
+      build_spec:
+        description: Public repository, full commit SHA and build configuration as JSON
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: terabits-build-${{ inputs.deploy_id }}
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      deploy_id: ${{ steps.source.outputs.deploy_id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Download public source at exact commit and generate context
+        id: source
+        env:
+          DEPLOY_ID: ${{ inputs.deploy_id }}
+          BUILD_SPEC: ${{ inputs.build_spec }}
+          GHCR_NAMESPACE: ${{ vars.GHCR_NAMESPACE || github.repository_owner }}
+          FETCH_DIRECTORY: ${{ runner.temp }}/fetch
+        run: node infra/scripts/fetch-source.mjs "$FETCH_DIRECTORY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-${{ steps.source.outputs.deploy_id }}
+          path: ${{ runner.temp }}/fetch/bundle/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  build:
+    needs: fetch
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v4
+        with:
+          name: source-${{ needs.fetch.outputs.deploy_id }}
+          path: ${{ runner.temp }}/bundle
+      - name: Build inside Docker without source or registry credentials
+        env:
+          DEPLOY_ID: ${{ needs.fetch.outputs.deploy_id }}
+          GHCR_NAMESPACE: ${{ vars.GHCR_NAMESPACE || github.repository_owner }}
+          BUNDLE_DIRECTORY: ${{ runner.temp }}/bundle
+          IMAGE_DIRECTORY: ${{ runner.temp }}/image
+        run: node infra/scripts/build-image.mjs "$BUNDLE_DIRECTORY" "$IMAGE_DIRECTORY" "${GHCR_NAMESPACE,,}" "$DEPLOY_ID"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-${{ needs.fetch.outputs.deploy_id }}
+          path: ${{ runner.temp }}/image/
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: [fetch, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v4
+        with:
+          name: image-${{ needs.fetch.outputs.deploy_id }}
+          path: ${{ runner.temp }}/image
+      - name: Authenticate only in the publishing job
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          GHCR_USER: ${{ github.actor }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+      - name: Validate image identity and publish
+        id: publish
+        env:
+          DEPLOY_ID: ${{ needs.fetch.outputs.deploy_id }}
+          BUILD_SPEC: ${{ inputs.build_spec }}
+          GHCR_NAMESPACE: ${{ vars.GHCR_NAMESPACE || github.repository_owner }}
+          IMAGE_DIRECTORY: ${{ runner.temp }}/image
+        run: node infra/scripts/publish-image.mjs "$IMAGE_DIRECTORY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: result-${{ needs.fetch.outputs.deploy_id }}
+          path: ${{ runner.temp }}/image/result.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Logout
+        if: always()
+        run: docker logout ghcr.io
