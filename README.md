@@ -7,12 +7,14 @@ Plataforma web para centralizar a publicação de aplicações a partir de repos
 O fluxo previsto para a plataforma é:
 
 1. Criar uma conta e conectar o GitHub.
-2. Selecionar um repositório com Dockerfile e workflow de publicação.
-3. Configurar a aplicação e suas variáveis de ambiente.
-4. Solicitar o deploy pela interface.
-5. Acompanhar os testes e o build no GitHub Actions.
-6. Publicar a imagem do GHCR no servidor de destino via SSH/SFTP.
+2. Selecionar um repositório e a branch que será publicada.
+3. Informar o tipo de aplicação, os comandos de build e inicialização e a porta, quando aplicável.
+4. Configurar as variáveis de ambiente dos serviços.
+5. Solicitar o deploy pela interface.
+6. Acompanhar o build e a publicação da imagem no GHCR pelo workflow central da Terabits.
 7. Acessar a aplicação, consultar logs e restaurar uma versão anterior quando necessário.
+
+A Terabits gera a configuração Docker e executa a publicação; o repositório selecionado não precisa conter Dockerfile nem workflow do GitHub Actions. O suporte inicial previsto inclui serviços Node.js e sites estáticos React/Vite. Um Dockerfile existente poderá ser escolhido no modo avançado.
 
 O ambiente local utiliza Docker para simular o servidor de destino. O projeto está em desenvolvimento; as funcionalidades disponíveis e as entregas planejadas estão registradas em [progresso](docs/progresso.md).
 

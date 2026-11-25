@@ -18,14 +18,14 @@ Senha com Argon2id; sessão opaca aleatória com hash no PostgreSQL, expiração
 
 GitHub App: autorização do usuário e instalação são passos distintos. Callback OAuth usa `state` aleatório, de uso único, persistido e ligado à sessão; verificar código no servidor. Setup callback de instalação não comprova propriedade sozinho: consultar instalações e repositórios acessíveis com token do usuário. Persistir tokens de usuário/refresh cifrados, renovar quando aplicável e tratar revogação. Não permitir que duas contas locais vinculem a mesma identidade GitHub no MVP.
 
-Permissões: Metadata read, Contents read e Actions write. Usar token de usuário para conferir acesso atual e tokens de instalação temporários limitados ao repositório nas operações do worker. Não conceder Contents write. Workflow usa seu próprio GITHUB_TOKEN com contents read e packages write para publicar. A imagem de demonstração será marcada pública no GHCR; não confundir autorização de repositório com autenticação de pull de imagem privada.
+Permissões da GitHub App: Metadata read, Contents read e Actions write; leitura nos repositórios selecionados, dispatch/polling somente no repositório central da Terabits. Usuários não precisam configurar Actions nos próprios projetos. Instalação central é configurada pelo administrador e pode diferir da instalação do código-fonte. Não conceder Contents write. Credenciais de leitura do código, execução do build e escrita no GHCR ficam separadas. A imagem de demonstração será pública; configuração detalhada em [Build e publicação](build-publicacao.md).
 
 ## Deploy
 
 ```text
 Browser → API → PostgreSQL (operação QUEUED)
                    ↓
-                worker → GitHub Actions → GHCR
+                worker → Actions central da Terabits → GHCR da Terabits
                    ↓
                SSH/SFTP → VPS simulada → app HTTP
 ```
@@ -36,13 +36,13 @@ Estados da operação: QUEUED → BUILDING → DEPLOYING → SUCCEEDED ou FAILED
 
 POST de deploy/rollback exige Idempotency-Key UUID. Persistir fingerprint canônico do payload, escopo do usuário e tipo de operação na própria operação. Repetição idêntica retorna mesmo ID/202; payload diferente ou operação concorrente com outra chave retorna 409. Retenção da chave acompanha histórico do projeto.
 
-Workflow recebe deploy_id e usa `run-name` com esse identificador. Persistir o run ID devolvido pelo dispatch quando disponível; se houver resposta sem run ID ou timeout ambíguo, reconciliar por workflow, ref e identificador antes de novo dispatch. Nunca adotar simplesmente o run mais recente. Consultar a cada 10 segundos, respeitando rate limits/backoff; timeout total inicial 20 minutos. Não fazer retry cego de efeitos externos.
+Workflow `.github/workflows/build-app.yml` fica na Terabits, separado da CI da própria plataforma. Recebe deploy_id e build_spec JSON com commit de origem exato e configuração validada; usa run-name com deploy_id. Ref do workflow é da plataforma; branch/SHA de origem pertence ao app e não deve ser confundida com ela. Persistir run ID devolvido pelo dispatch quando disponível; em resposta ausente/ambígua, reconciliar no repositório central por workflow/ref/identificador antes de repetir. Consultar a cada 10 segundos, respeitando rate limits/backoff; timeout total inicial 20 minutos.
 
-Tag `ghcr.io/<owner>/<repo>:deploy-<uuid>` é única por operação. Impedir sobrescrita pelo fluxo; salvar digest e executar pull/run pelo digest confirmado. Não tratar tag como imutável apenas porque tem nome único.
+Imagem `ghcr.io/<namespace-terabits>/app-<projectId>:deploy-<deploymentId>`, independente do dono/nome do código-fonte, única por operação. Namespace vem do servidor. Salvar digest, SHA de origem, versão do gerador e snapshot da configuração de build. Publicar por digest confirmado; tag não é imutável apenas pelo nome. Detalhes de geração Docker, modos suportados e isolamento em [Build e publicação](build-publicacao.md).
 
 ## VPS e segredos
 
-Etapa 02 adicionará VPS DinD com OpenSSH e volume Docker próprio, em profile `lab`, sem montar o socket Docker do host no backend. DinD exige modo privilegiado e é restrito ao laboratório local. Mapear SSH em 127.0.0.1:2222 e portas 4000–4020 na interface local. API/worker acessam hostname da VPS dentro da rede Compose quando containerizados. Não publicar Docker TCP.
+Etapa 02 entrega VPS DinD com OpenSSH e volumes próprios para Docker, aplicações e host keys, em profile `lab`, sem montar o socket Docker do host no backend. DinD exige modo privilegiado e é restrito ao laboratório local. SSH em 127.0.0.1:2222 e portas 4000–4020 na interface local. Engine interno atende somente pelo Unix socket, sem TCP. API/worker futuros usarão hostname da VPS dentro da rede Compose. Setup, validações e limites estão em [Laboratório de deploy](laboratorio.md).
 
 SSH usa chave dedicada e fingerprint conhecido, nunca aceita host key automaticamente. Usuário dedicado tem acesso ao Docker da VPS de laboratório. Comandos remotos têm formato fixo e argumentos validados; nome de container/caminho é derivado de UUID de projeto, nunca nome livre ou texto do browser.
 

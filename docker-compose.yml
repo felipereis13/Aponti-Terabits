@@ -34,5 +34,38 @@ services:
       timeout: 3s
       retries: 15
 
+  vps:
+    profiles: ["lab"]
+    build:
+      context: ./infra/vps
+    privileged: true
+    init: true
+    environment:
+      DOCKER_HOST: unix:///var/run/docker.sock
+      DOCKER_TLS_CERTDIR: ""
+    ports:
+      - "127.0.0.1:2222:22"
+      - "127.0.0.1:4000-4020:4000-4020"
+    volumes:
+      - vps_docker:/var/lib/docker
+      - vps_apps:/opt/terabits/apps
+      - vps_host_keys:/etc/ssh/keys
+      - type: bind
+        source: ./infra/vps/secrets/id_ed25519.pub
+        target: /run/terabits/authorized_keys
+        read_only: true
+        bind:
+          create_host_path: false
+    healthcheck:
+      test: ["CMD-SHELL", "docker info >/dev/null 2>&1 && test -s /run/sshd.pid && kill -0 $$(cat /run/sshd.pid)"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    stop_grace_period: 40s
+
 volumes:
   postgres_data:
+  vps_docker:
+  vps_apps:
+  vps_host_keys:

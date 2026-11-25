@@ -14,11 +14,13 @@ Prisma CLI/client fixados em 6.19.3. A prontidão usa `pg` sem depender de model
 | 03 | Session | Hash de token opaco único, usuário, expiração; token plaintext só no cookie |
 | 04 | GithubConnection | Usuário local único, GitHub user ID único, tokens/refresh cifrados e validade |
 | 04 | GithubOAuthState | Hash de nonce único, sessão/usuário, validade curta e consumedAt |
-| 05 | Project | UUID, ownerId, repository ID e instalação GitHub, owner/repo, branch, workflow, internalPort, externalPort único, healthPath e estado de exclusão |
+| 05 | Project | UUID, ownerId, repository ID e instalação de origem, owner/repo, branch, buildMode, rootDirectory, buildCommand/testCommand/startCommand, publishDirectory ou dockerfilePath conforme modo, internalPort, externalPort único, healthPath e estado de exclusão |
 | 06 | EnvironmentVariable | Projeto, chave, ciphertext, IV, authTag; unique(projectId, key) |
-| 07 | Deployment | Projeto, autor, tipo DEPLOY/ROLLBACK, status, chave de idempotência, fingerprint, imagem/digest, run ID, estágio, tentativas, erro sanitizado e datas |
+| 07 | Deployment | Projeto, autor, tipo DEPLOY/ROLLBACK, status, chave de idempotência, fingerprint, sourceCommitSha, snapshot da configuração/versão do gerador, imagem/digest, repositório/ref/run ID centrais, estágio, tentativas, erro sanitizado e datas |
 
 Relações e datas UTC serão definidas nos modelos da etapa correspondente. Não armazenar URLs com credenciais, `.env` plaintext ou valores de segredo em mensagens de erro.
+
+Não persistir workflowFile por projeto. Configuração central fica no servidor; persistir identificação central e snapshot no deploy para rastrear alterações da plataforma. Campos de build seguem os modos em [Build e publicação](build-publicacao.md); rejeitar combinações incoerentes no servidor. SHA de origem não pode ser sobrescrito ao retomar uma operação. Nenhuma migration desta revisão foi criada/aplicada.
 
 ## Concorrência e integridade
 
