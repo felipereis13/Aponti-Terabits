@@ -1,0 +1,38 @@
+name: terabits-deploy
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: terabits
+      POSTGRES_PASSWORD: local-development-only
+      POSTGRES_DB: terabits
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U terabits -d terabits"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  postgres-test:
+    image: postgres:17-alpine
+    profiles: ["test"]
+    environment:
+      POSTGRES_USER: terabits_test
+      POSTGRES_PASSWORD: local-test-only
+      POSTGRES_DB: terabits_test
+    ports:
+      - "127.0.0.1:5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U terabits_test -d terabits_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  postgres_data:
